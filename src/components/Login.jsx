@@ -1,4 +1,5 @@
 import { useState } from 'react'; // Importa o hook useState do React
+import { login } from '../services/AuthService'; // Importa a função de login do AuthService
 import styled from 'styled-components'; // Importa styled-components para estilizar os componentes
 
 // Define o estilo do container principal do login
@@ -45,25 +46,47 @@ const Button = styled.button`
   }
 `;
 
+//Estiliza a mensagem de erro
+const Error = styled.p`
+    color: #E50914;
+    font-size: 0.8em;
+    font-weight: 600;
+`;
+
 // Componente principal de Login
 // eslint-disable-next-line react/prop-types
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState(''); // Define o estado para o nome de usuário
   const [password, setPassword] = useState(''); // Define o estado para a senha
+  const [userError, setUserError] = useState(''); //Define o estado para a mensagem de erro no campo usuário
+  const [passwordError, setPasswordError] = useState(''); //Define o estado para a mensagem de erro no campo senha
 
-  // Função para lidar com o envio do formulário
   const handleSubmit = (e) => {
-    e.preventDefault(); // Previne o comportamento padrão do formulário
-    if (username === 'admin' && password === 'password') {
-      onLogin(); // Chama a função onLogin passada como prop se as credenciais estiverem corretas
+    e.preventDefault();
+
+    // Tenta autenticar usando a função login do AuthService
+    const isLoggedIn = login(username, password);
+
+    if (isLoggedIn) {
+      onLogin(); // Se o login for bem-sucedido, chama a função onLogin passada como prop
     } else {
-      alert('Invalid credentials'); // Exibe um alerta se as credenciais estiverem incorretas
+      // Se o login falhar, exibe as mensagens de erro apropriadas
+      if (username !== 'admin') {
+        setUserError('Incorrect username.');
+      } else {
+        setUserError('');
+      }
+      if (password !== 'password') {
+        setPasswordError('Incorrect password.');
+      } else {
+        setPasswordError('');
+      }
     }
   };
 
   return (
     <LoginContainer>
-      <LoginForm onSubmit={handleSubmit}>
+      <LoginForm onSubmit={handleSubmit}> {/* Chama a função handleSubmit quando o botão de tipo 'submit' for clicado */}
         <h2>Login</h2>
         <Input
           type="text"
@@ -71,12 +94,14 @@ const Login = ({ onLogin }) => {
           onChange={(e) => setUsername(e.target.value)} // Atualiza o estado username conforme o usuário digita
           placeholder="Username" // Placeholder do campo de entrada
         />
+        {userError && <Error>{userError}</Error>} {/* Mostra a mensagem de erro quando nome de usuário estiver incorreto */}
         <Input
           type="password"
           value={password} // Valor do campo de entrada é ligado ao estado password
           onChange={(e) => setPassword(e.target.value)} // Atualiza o estado password conforme o usuário digita
           placeholder="Password" // Placeholder do campo de entrada
         />
+        {passwordError && <Error>{passwordError}</Error>} {/* Mostra a mensagem de erro quando a senha estiver incorreta */}
         <Button type="submit">Login</Button> {/* Botão que envia o formulário */}
       </LoginForm>
     </LoginContainer>
